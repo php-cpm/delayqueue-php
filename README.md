@@ -11,7 +11,7 @@
 
 依赖
 --------
-* PHP5.4+
+* PHP5.5+
 * ext-pcntl
 
 安装
@@ -121,6 +121,9 @@ class OrderHandler extends AbstractHandler
         // 未抛出异常视为成功, Job将会被删除
         // Job唯一标识
         // $this->id;
+        
+        // Job Topic
+        // $this->topic;
         
         // Job自定义内容
         // $this->body;
