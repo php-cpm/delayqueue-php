@@ -117,7 +117,7 @@ class Job implements JsonSerializable
 
     /**
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      */
     public function appendValueToBody($key, $value)
     {

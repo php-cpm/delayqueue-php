@@ -33,10 +33,12 @@ class DelayQueueTest extends \PHPUnit_Framework_TestCase
         $job->setId($this->jobId);
         $job->setDelay(5 * Time::SECOND);
         $job->setTtr(60 * Time::SECOND);
-        $job->setBody([
+        $job->setBody(
+            [
             'uid' => 10829378,
             'created' => 1498657365,
-        ]);
+            ]
+        );
 
         return [
             [
@@ -94,21 +96,26 @@ class DelayQueueTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($job->id, $data['id']);
         $this->assertEquals($className, $data['className']);
         $this->assertEquals($job->body, $data['body']);
-        /** @var AbstractHandler $class */
+        /**
+ * @var AbstractHandler $class 
+*/
         $container = new Container();
-        $container->set('logger', function () {
-            $logger = new Logger('delay-queue');
-            $logger->pushHandler(
-                new StreamHandler(
-                    'php://stdout',
-                    Logger::INFO,
-                    true,
-                    null,
-                    true)
-            );
+        $container->set(
+            'logger', function () {
+                $logger = new Logger('delay-queue');
+                $logger->pushHandler(
+                    new StreamHandler(
+                        'php://stdout',
+                        Logger::INFO,
+                        true,
+                        null,
+                        true
+                    )
+                );
 
-            return $logger;
-        });
+                return $logger;
+            }
+        );
         $class = new $data['className']($container);
         $class->setId($data['id']);
         $class->setBody($data['body']);

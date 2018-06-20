@@ -11,10 +11,12 @@ $job->setTopic('order');
 $job->setId('15702398321');
 $job->setDelay(1 * Time::MINUTE);
 $job->setTtr(20 * Time::SECOND);
-$job->setBody([
-   'uid' => 10829378,
-  'created' => 1498657365,
-]);
+$job->setBody(
+    [
+    'uid' => 10829378,
+    'created' => 1498657365,
+    ]
+);
 
 
 $delayQueue = new DelayQueue('http://127.0.0.1:9277');

@@ -31,7 +31,7 @@ class Worker
     public function run()
     {
         $this->registerSignalHandlers();
-        while(true) {
+        while (true) {
             if ($this->shutdown) {
                 break;
             }
@@ -39,19 +39,19 @@ class Worker
             try {
                 $data = $this->delayQueue->pop($this->topics);
             } catch (Exception $exception) {
-                $this->logger->warning(sprintf('polling queue exception: %s', $exception->getMessage()));
+                $this->logger->warning(sprintf('polling queue exception: %s %s', $exception->getMessage(), $exception->getTraceAsString()));
                 continue;
             }
 
-            if (!$data) {
+            if (! $data) {
                 // 空轮询
                 continue;
             }
 
             try {
                 $this->delayQueue->validateClassName($data['className']);
-            } catch(Exception $exception) {
-                $this->logger->emergency($exception->getMessage());
+            } catch (Exception $exception) {
+                $this->logger->emergency($exception->getMessage() . ' ' . $exception->getTraceAsString());
                 continue;
             }
 
@@ -62,15 +62,19 @@ class Worker
     protected function perform(array $data)
     {
         $pid = pcntl_fork();
-        if ($pid< 0) {
+        if ($pid < 0) {
             $this->logger->emergency('Unable to fork child worker', ['job' => $data]);
+
             return;
         }
         if ($pid === 0) {
             // 子进程
-            /** @var AbstractHandler $class */
+            /**
+             * @var AbstractHandler $class
+             */
             $class = new $data['className']($this->container);
             $class->setId($data['id']);
+            $class->setTopic($data['topic']);
             $class->setBody($data['body']);
             $this->logger->info('Start processing Job', ['data' => $data]);
             $class->run();
@@ -92,8 +96,10 @@ class Worker
      */
     protected function registerSignalHandlers()
     {
+        //kill
         pcntl_signal(SIGTERM, [$this, 'shutdown']);
-        pcntl_signal(SIGINT , [$this, 'shutdown']);
+        //ctrl-C
+        pcntl_signal(SIGINT, [$this, 'shutdown']);
     }
 
     /**

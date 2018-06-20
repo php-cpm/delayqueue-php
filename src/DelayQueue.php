@@ -47,6 +47,7 @@ class DelayQueue
      *
      * @param string $className 处理Job的类名, 必须是[DelayQueue\Handler\AbstractHandler]的子类
      * @param Job    $job
+     *
      * @throws ClassNotFoundException
      * @throws Exception
      * @throws InvalidResponseBodyException
@@ -57,43 +58,51 @@ class DelayQueue
         $this->validateClassName($className);
         $job->appendValueToBody('className', $className);
 
-        $response = $this->getHttpClient()->post('/push', [
-            'json' => $job,
-        ]);
-        $this->checkResponseBody($response->json());
+        $response = $this->getHttpClient()->post(
+            '/push',
+            [
+                'json' => $job,
+            ]
+        );
+        $this->checkResponseBody($this->getJson($response));
     }
 
     /**
      * 从队列中取出已过期的Job
      *
-     * @param  array $topics  队列名称
+     * @param array $topics 队列名称
+     *
      * @return null|array
      * @throws Exception
      * @throws InvalidResponseBodyException
      */
     public function pop(array $topics)
     {
-        if (!$topics) {
+        if (! $topics) {
             return null;
         }
-        $response = $this->getHttpClient()->post('/pop', [
-            'json' => [
-                'topic' => implode(',', $topics),
+        $response = $this->getHttpClient()->post(
+            '/pop',
+            [
+                'json' => [
+                    'topic' => implode(',', $topics),
+                ]
             ]
-        ]);
+        );
 
-        $data =  $response->json();
+        $data = $this->getJson($response);
         $this->checkResponseBody($data);
-        if (!isset($data['data']) || empty($data['data'])) {
+        if (! isset($data['data']) || empty($data['data'])) {
             return null;
         }
 
-        if (!isset($data['data']['id']) || !isset($data['data']['body'])) {
+        if (! isset($data['data']['id']) || ! isset($data['data']['body'])) {
             throw new InvalidResponseBodyException('response body miss required parameter, id or body');
         }
-        $id        = $data['data']['id'];
-        $body      = json_decode($data['data']['body'], true);
-        if (!isset($body['className'])) {
+        $id = $data['data']['id'];
+        $topic = $data['data']['topic'];
+        $body = json_decode($data['data']['body'], true);
+        if (! isset($body['className'])) {
             throw new InvalidResponseBodyException('response body miss required parameter className');
         }
         $className = $body['className'];
@@ -101,55 +110,65 @@ class DelayQueue
 
         return [
             'className' => $className,
-            'id' => $id,
-            'body' => $body,
+            'id'        => $id,
+            'topic'     => $topic,
+            'body'      => $body,
         ];
     }
 
     /**
      * 从延迟队列中删除Job
      *
-     * @param  string    $id Job唯一标识
+     * @param string $id Job唯一标识
+     *
      * @throws Exception
      * @throws InvalidResponseBodyException
      */
     public function delete($id)
     {
-        $response = $this->getHttpClient()->post('/delete', [
-            'json' => [
-               'id' => $id
+        $response = $this->getHttpClient()->post(
+            '/delete',
+            [
+                'json' => [
+                    'id' => $id
+                ]
             ]
-        ]);
-        $body =  $response->json();
+        );
+        $body = $this->getJson($response);
         $this->checkResponseBody($body);
     }
 
     /**
      * Job处理完成, 确认删除
      *
-     * @param  string $id Job唯一标识
+     * @param string $id Job唯一标识
+     *
      * @return true
      * @throws Exception
      * @throws InvalidResponseBodyException
      */
     public function finish($id)
     {
-        $response = $this->getHttpClient()->post('/finish', [
-            'json' => [
-                'id' => $id,
+        $response = $this->getHttpClient()->post(
+            '/finish',
+            [
+                'json' => [
+                    'id' => $id,
+                ]
             ]
-        ]);
-        $body = $response->json();
+        );
+        $body = $this->getJson($response);
         $this->checkResponseBody($body);
     }
 
-    public function validateClassName($className) {
-        if (!class_exists($className)) {
+    public function validateClassName($className)
+    {
+        if (! class_exists($className)) {
             throw new ClassNotFoundException(sprintf('can not find class [%s]', $className));
         }
         $reflection = new ReflectionClass($className);
         $parentClassName = 'DelayQueue\Handler\AbstractHandler';
-        if (!$reflection->isSubclassOf($parentClassName)) {
+        if (! $reflection->isSubclassOf($parentClassName)) {
             throw new SubClassException(sprintf('[%s] is not subclass of [%s]', $className, $parentClassName));
         }
     }
@@ -158,9 +177,9 @@ class DelayQueue
     {
         $httpClient = new HttpClient(
             [
-                'base_url' => $this->server,
+                'base_uri' => $this->server,
                 'defaults' => [
-                    'timeout' => $this->timeout,
+                    'timeout'         => $this->timeout,
                     'allow_redirects' => false,
                 ]
             ]
@@ -169,14 +188,20 @@ class DelayQueue
         return $httpClient;
     }
 
+    protected function getJson($response)
+    {
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
     /**
      * @param  array $body
+     *
      * @throws Exception
      * @throws InvalidResponseBodyException
      */
     protected function checkResponseBody(array $body)
     {
-        if (!array_key_exists('code', $body) || !array_key_exists('message', $body)) {
+        if (! array_key_exists('code', $body) || ! array_key_exists('message', $body)) {
             throw new InvalidResponseBodyException('response body miss required parameter, code or message');
         }
         if ($body['code'] !== 0) {

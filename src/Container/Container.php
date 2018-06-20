@@ -10,16 +10,16 @@ use DelayQueue\Exception\ServiceNotFoundException;
 /**
  * 服务容器
  */
-class Container implements  ContainerInterface, ArrayAccess
+class Container implements ContainerInterface, ArrayAccess
 {
     /**
      * @var array 服务定义
      */
-    protected  $definitions = [];
+    protected $definitions = [];
     /**
      * @var array 已实例化的服务
      */
-    protected  $instances = [];
+    protected $instances = [];
 
     /**
      * 添加服务
@@ -27,7 +27,7 @@ class Container implements  ContainerInterface, ArrayAccess
      * @param string  $id       服务唯一标识
      * @param Closure $callback
      */
-    public  function set($id, Closure $callback)
+    public function set($id, Closure $callback)
     {
         if ($id) {
             $this->definitions[$id] = $callback;
@@ -37,7 +37,8 @@ class Container implements  ContainerInterface, ArrayAccess
     /**
      * 查找服务是否存在
      *
-     * @param  string $id 服务唯一标识
+     * @param string $id 服务唯一标识
+     *
      * @return bool
      */
     public function has($id)
@@ -48,22 +49,25 @@ class Container implements  ContainerInterface, ArrayAccess
     /**
      * 获取服务
      *
-     * @param  string $id 服务唯一标识
+     * @param string $id 服务唯一标识
+     *
      * @return mixed
      * @throws ServiceNotFoundException
      */
-    public  function get($id)
+    public function get($id)
     {
         if (isset($this->instances[$id])) {
             return $this->instances[$id];
         }
 
-        if (!isset($this->definitions[$id])) {
+        if (! isset($this->definitions[$id])) {
             $message = sprintf('service [%s] not exists', $id);
             throw new ServiceNotFoundException($message);
         }
 
-        /** @var Closure $callback */
+        /**
+         * @var Closure $callback
+         */
         $callback = $this->definitions[$id];
         $callback = $callback->bindTo($this);
 

@@ -9,6 +9,7 @@ use Exception;
  * Job处理抽象类
  *
  * Class AbstractHandler
+ *
  * @package DelayQueue\Handler
  */
 abstract class AbstractHandler implements HandlerInterface
@@ -19,6 +20,10 @@ abstract class AbstractHandler implements HandlerInterface
      * @var string Job唯一标识
      */
     protected $id;
+    /**
+     * @var string Job Topic
+     */
+    protected $topic;
 
     /**
      * @var array
@@ -31,6 +36,14 @@ abstract class AbstractHandler implements HandlerInterface
     public function setId($id)
     {
         $this->id = $id;
+    }
+
+    /**
+     * @param string $topic
+     */
+    public function setTopic($topic)
+    {
+        $this->topic = $topic;
     }
 
     /**
@@ -49,15 +62,19 @@ abstract class AbstractHandler implements HandlerInterface
             $this->perform();
             $this->delayQueue->finish($this->id);
         } catch (Exception $exception) {
-            $this->logger->warning(sprintf('Job execution failed %s', $exception->getMessage()));
+            $this->logger->warning(sprintf('Job execution failed %s %s', $exception->getMessage(), $exception->getTraceAsString()));
         }
 
         $this->tearDown();
     }
 
-    protected function setUp() { }
+    protected function setUp()
+    {
+    }
 
-    protected function tearDown() { }
+    protected function tearDown()
+    {
+    }
 
     abstract protected function perform();
 }
