@@ -27,6 +27,10 @@ class Worker
         $this->topics = $topics;
     }
 
+    protected function wait()
+    {
+        sleep(1);
+    }
 
     public function run()
     {
@@ -40,11 +44,13 @@ class Worker
                 $data = $this->delayQueue->pop($this->topics);
             } catch (Exception $exception) {
                 $this->logger->warning(sprintf('polling queue exception: %s %s', $exception->getMessage(), $exception->getTraceAsString()));
+                $this->wait();
                 continue;
             }
 
             if (! $data) {
                 // 空轮询
+                $this->logger->warning('empty: %s %s');
                 continue;
             }
 
