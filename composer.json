@@ -1,5 +1,5 @@
 {
-  "name": "start-point/delayqueue-php",
+  "name": "php-cpm/delayqueue-php",
   "type": "library",
   "description": "PHP client for DelayQueue",
   "keywords": ["delayqueue","delayqueue-php"],
@@ -10,6 +10,8 @@
       "name": "ouqiang",
       "email": "qingqianludao@gmail.com",
       "homepage": "https://github.com/ouqiang"
+    },{
+      "name": "php-cpm"
     }
   ],
   "require": {
